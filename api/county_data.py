@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-from http.server import BaseHTTPRequestHandler
-import json
+from flask import Flask, request, jsonify
 import sqlite3
 import os
+
+app = Flask(__name__)
 
 allowed_measures = [
     "Violent crime rate",
@@ -19,41 +19,32 @@ allowed_measures = [
     "Daily fine particulate matter"
 ]
 
-def handle_request(request):
+@app.route('/county_data', methods=['POST'])
+def county_data():
     try:
-        # Parse JSON body
-        body = json.loads(request.get('body', '{}'))
+        # Get JSON data
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
 
-        # Check for coffee=teapot special behavior
-        if body.get('coffee') == 'teapot':
-            return {
-                'statusCode': 418,
-                'body': "I'm a teapot"
-            }
+        # Check for teapot
+        if data.get('coffee') == 'teapot':
+            return "I'm a teapot", 418
 
-        # Validate required parameters zip and measure_name
-        zip_code = body.get('zip')
-        measure_name = body.get('measure_name')
+        # Validate required parameters
+        zip_code = data.get('zip')
+        measure_name = data.get('measure_name')
 
         if not zip_code or not measure_name:
-            return {
-                'statusCode': 400,
-                'body': 'Missing required parameters'
-            }
+            return jsonify({'error': 'Missing required parameters'}), 400
 
         if not (isinstance(zip_code, str) and len(zip_code) == 5 and zip_code.isdigit()):
-            return {
-                'statusCode': 400,
-                'body': 'Invalid ZIP code'
-            }
+            return jsonify({'error': 'Invalid ZIP code'}), 400
 
         if measure_name not in allowed_measures:
-            return {
-                'statusCode': 400,
-                'body': 'Invalid measure_name'
-            }
+            return jsonify({'error': 'Invalid measure_name'}), 400
 
-        # Connect to the SQLite database
+        # Connect to database
         db_path = os.path.join(os.path.dirname(__file__), '..', 'data.db')
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
@@ -85,12 +76,9 @@ def handle_request(request):
         conn.close()
 
         if not rows:
-            return {
-                'statusCode': 404,
-                'body': 'Not Found'
-            }
+            return jsonify({'error': 'No data found'}), 404
 
-        # Define output field names (lowercase with underscores)
+        # Define column names
         columns = [
             "state", 
             "county", 
@@ -108,26 +96,12 @@ def handle_request(request):
             "fipscode"
         ]
 
+        # Convert to list of dictionaries
         results = [dict(zip(columns, row)) for row in rows]
-
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json'
-            },
-            'body': json.dumps(results)
-        }
+        return jsonify(results)
 
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': str(e)
-        }
+        return jsonify({'error': str(e)}), 500
 
-def handler(request):
-    if request.get('method') != 'POST':
-        return {
-            'statusCode': 404,
-            'body': 'Not Found'
-        }
-    return handle_request(request)
+if __name__ == '__main__':
+    app.run()
