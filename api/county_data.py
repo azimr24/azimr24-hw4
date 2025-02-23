@@ -130,3 +130,5 @@ def handler(request, response):
     except Exception as e:
         response.status_code = 500
         return response.send(str(e))
+
+__all__ = ['handler']
