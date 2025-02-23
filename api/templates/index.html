@@ -107,7 +107,14 @@
         }
         .error {
             color: red;
-            margin-top: 10px;
+        }
+        .teapot {
+            color: #856404;
+            background-color: #fff3cd;
+            padding: 15px;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -195,19 +202,29 @@
                     body: JSON.stringify(formData)
                 });
 
-                const data = await response.json().catch(() => response.text());
-                
                 const responseElement = document.getElementById('response');
-                if (typeof data === 'object') {
-                    responseElement.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-                } else {
-                    responseElement.innerHTML = '<pre>' + data + '</pre>';
+                
+                // Clear previous response
+                responseElement.className = '';
+                
+                if (response.status === 418) {
+                    responseElement.className = 'teapot';
+                    responseElement.innerHTML = '<pre>I\'m a teapot! 🫖</pre>';
+                    return;
+                }
+                
+                // Try to parse as JSON first
+                try {
+                    const jsonData = await response.json();
+                    responseElement.innerHTML = '<pre>' + JSON.stringify(jsonData, null, 2) + '</pre>';
+                } catch (e) {
+                    // If JSON parsing fails, get the text
+                    const textData = await response.text();
+                    responseElement.innerHTML = '<pre>' + textData + '</pre>';
                 }
                 
                 if (!response.ok) {
                     responseElement.classList.add('error');
-                } else {
-                    responseElement.classList.remove('error');
                 }
                 
                 const statusBadge = document.getElementById('statusBadge');
