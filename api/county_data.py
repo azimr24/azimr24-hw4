@@ -19,7 +19,7 @@ allowed_measures = [
     "Daily fine particulate matter"
 ]
 
-@app.route('/')
+@app.route('/county_data', methods=['GET'])
 def index():
     return render_template('index.html')
 
@@ -38,6 +38,7 @@ def county_data():
         # Validate required parameters
         zip_code = data.get('zip')
         measure_name = data.get('measure_name')
+        limit = data.get('limit', 10)  # Default to 10 if not specified
 
         if not zip_code or not measure_name:
             return jsonify({'error': 'Missing required parameters'}), 400
@@ -48,12 +49,15 @@ def county_data():
         if measure_name not in allowed_measures:
             return jsonify({'error': 'Invalid measure_name'}), 400
 
+        if not isinstance(limit, int) or limit < 1:
+            return jsonify({'error': 'Invalid limit parameter'}), 400
+
         # Connect to database
         db_path = os.path.join(os.path.dirname(__file__), '..', 'data.db')
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
-        # Query the county_health_rankings table
+        # Query the county_health_rankings table with LIMIT
         query = '''
         SELECT State,
                County,
@@ -72,9 +76,10 @@ def county_data():
         FROM county_health_rankings
         WHERE Measure_name = ?
         ORDER BY Year_span DESC
+        LIMIT ?
         '''
 
-        cur.execute(query, (measure_name,))
+        cur.execute(query, (measure_name, limit))
         rows = cur.fetchall()
         conn.close()
 
