@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""
-API endpoint for county_data
-
-This function is intended to be deployed on Vercel as a serverless function.
-It accepts HTTP POST requests with JSON content, which must include a 5-digit ZIP code and a measure_name.
-It queries data.db (created previously) by joining the zip_county and county_health_rankings tables and returns matching results in JSON.
-
-Special behavior:
-- If the JSON data contains a key coffee with value teapot, it immediately returns HTTP 418.
-- If required parameters are missing or invalid, it returns HTTP 400.
-- If no matching records are found, it returns HTTP 404.
-
-The allowed measure_name values are specified in allowed_measures.
-"""
-
+from http.server import BaseHTTPRequestHandler
 import json
 import sqlite3
 import os
@@ -33,41 +19,39 @@ allowed_measures = [
     "Daily fine particulate matter"
 ]
 
-def handler(request, response):
+def handle_request(request):
     try:
-        # Only allow POST requests
-        if request.method != 'POST':
-            response.status_code = 404
-            return response.send('Not Found')
-
-        try:
-            # Parse JSON body
-            body = request.body.decode('utf-8') if isinstance(request.body, bytes) else request.body
-            data = json.loads(body)
-        except Exception as e:
-            response.status_code = 400
-            return response.send('Invalid JSON')
+        # Parse JSON body
+        body = json.loads(request.get('body', '{}'))
 
         # Check for coffee=teapot special behavior
-        if data.get('coffee') == 'teapot':
-            response.status_code = 418
-            return response.send("I'm a teapot")
+        if body.get('coffee') == 'teapot':
+            return {
+                'statusCode': 418,
+                'body': "I'm a teapot"
+            }
 
         # Validate required parameters zip and measure_name
-        zip_code = data.get('zip')
-        measure_name = data.get('measure_name')
+        zip_code = body.get('zip')
+        measure_name = body.get('measure_name')
 
         if not zip_code or not measure_name:
-            response.status_code = 400
-            return response.send('Missing required parameters')
+            return {
+                'statusCode': 400,
+                'body': 'Missing required parameters'
+            }
 
         if not (isinstance(zip_code, str) and len(zip_code) == 5 and zip_code.isdigit()):
-            response.status_code = 400
-            return response.send('Invalid ZIP code')
+            return {
+                'statusCode': 400,
+                'body': 'Invalid ZIP code'
+            }
 
         if measure_name not in allowed_measures:
-            response.status_code = 400
-            return response.send('Invalid measure_name')
+            return {
+                'statusCode': 400,
+                'body': 'Invalid measure_name'
+            }
 
         # Connect to the SQLite database
         db_path = os.path.join(os.path.dirname(__file__), '..', 'data.db')
@@ -101,8 +85,10 @@ def handler(request, response):
         conn.close()
 
         if not rows:
-            response.status_code = 404
-            return response.send('Not Found')
+            return {
+                'statusCode': 404,
+                'body': 'Not Found'
+            }
 
         # Define output field names (lowercase with underscores)
         columns = [
@@ -124,11 +110,24 @@ def handler(request, response):
 
         results = [dict(zip(columns, row)) for row in rows]
 
-        response.headers['Content-Type'] = 'application/json'
-        return response.send(json.dumps(results))
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps(results)
+        }
 
     except Exception as e:
-        response.status_code = 500
-        return response.send(str(e))
+        return {
+            'statusCode': 500,
+            'body': str(e)
+        }
 
-__all__ = ['handler']
+def handler(request):
+    if request.get('method') != 'POST':
+        return {
+            'statusCode': 404,
+            'body': 'Not Found'
+        }
+    return handle_request(request)

@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/*.py",
+      "src": "api/county_data.py",
       "use": "@vercel/python"
     }
   ],
@@ -10,11 +10,7 @@
     {
       "src": "/county_data",
       "methods": ["POST"],
-      "dest": "api/county_data.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/api/county_data.py"
     }
   ]
 }
