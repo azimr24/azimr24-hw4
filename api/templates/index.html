@@ -192,74 +192,80 @@
         </form>
     </div>
 
-    <div id="response" class="container response">
-        <h2>Response</h2>
-        <div id="status-code" class="status-code"></div>
-        <div id="responseData"></div>
+    <div id="response-container">
+        <div id="status-code"></div>
+        <div id="response"></div>
     </div>
 
     <script>
         document.getElementById('apiForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            submitRequest();
+        });
+
+        async function submitRequest() {
+            const zip = document.getElementById('zip').value;
+            const measure = document.getElementById('measure').value;
+            const limit = parseInt(document.getElementById('limit').value);
+            const teapot = document.getElementById('teapot').checked;
             
-            const formData = {
-                zip: document.getElementById('zip').value,
-                measure_name: document.getElementById('measure').value,
-                limit: parseInt(document.getElementById('limit').value)
+            const data = {
+                zip: zip,
+                measure_name: measure,
+                limit: limit
             };
-
-            if (document.getElementById('teapot').checked) {
-                formData.coffee = 'teapot';
+            
+            if (teapot) {
+                data.coffee = 'teapot';
             }
-
+            
             try {
                 const response = await fetch('/county_data', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(data)
                 });
-
-                const responseElement = document.getElementById('response');
                 
-                // Clear previous response
-                responseElement.className = '';
+                // Update status code
+                const statusElement = document.getElementById('status-code');
+                const statusClass = `status-badge status-${response.status}`;
+                statusElement.innerHTML = `<span class="${statusClass}">Status: ${response.status} ${response.statusText}</span>`;
+                
+                // Get response element
+                const responseElement = document.getElementById('response');
+                responseElement.className = ''; // Clear previous classes
                 
                 if (response.status === 418) {
                     responseElement.className = 'teapot';
-                    responseElement.innerHTML = '<pre>I\'m a teapot! 🫖</pre>';
+                    responseElement.textContent = "I'm a teapot! 🫖";
                     return;
                 }
                 
-                // Show status code
-                const statusElement = document.getElementById('status-code');
-                statusElement.innerHTML = `<div class="status-code status-${response.status}">Status Code: ${response.status} ${response.statusText}</div>`;
-                
-                // Try to parse as JSON first
+                let content;
                 try {
+                    // Try to parse as JSON
                     const jsonData = await response.json();
-                    responseElement.innerHTML = '<pre>' + JSON.stringify(jsonData, null, 2) + '</pre>';
-                } catch (e) {
-                    // If JSON parsing fails, get the text
-                    const textData = await response.text();
-                    responseElement.innerHTML = '<pre>' + textData + '</pre>';
+                    content = JSON.stringify(jsonData, null, 2);
+                } catch {
+                    // If not JSON, get as text
+                    content = await response.text();
                 }
                 
+                responseElement.textContent = content;
                 if (!response.ok) {
-                    responseElement.classList.add('error');
+                    responseElement.className = 'error';
                 }
-                
-                // Show response
-                document.getElementById('response').style.display = 'block';
-
             } catch (error) {
-                document.getElementById('response').style.display = 'block';
-                document.getElementById('status-code').innerHTML = '<div class="status-code status-500">Status Code: 500 Internal Server Error</div>';
-                document.getElementById('responseData').textContent = 
-                    `Error: ${error.message}`;
+                const statusElement = document.getElementById('status-code');
+                const responseElement = document.getElementById('response');
+                
+                statusElement.innerHTML = '<span class="status-badge status-500">Status: 500 Internal Server Error</span>';
+                responseElement.textContent = `Error: ${error.message}`;
+                responseElement.className = 'error';
             }
-        });
+        }
     </script>
 </body>
 </html>
