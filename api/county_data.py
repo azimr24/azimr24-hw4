@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import sqlite3
 import os
 
@@ -18,6 +18,10 @@ allowed_measures = [
     "Premature Death",
     "Daily fine particulate matter"
 ]
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/county_data', methods=['POST'])
 def county_data():
@@ -49,34 +53,48 @@ def county_data():
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
-        query = '''
-        SELECT county_health_rankings.State,
-               county_health_rankings.County,
-               county_health_rankings.State_code,
-               county_health_rankings.County_code,
-               county_health_rankings.Year_span,
-               county_health_rankings.Measure_name,
-               county_health_rankings.Measure_id,
-               county_health_rankings.Numerator,
-               county_health_rankings.Denominator,
-               county_health_rankings.Raw_value,
-               county_health_rankings.Confidence_Interval_Lower_Bound,
-               county_health_rankings.Confidence_Interval_Upper_Bound,
-               county_health_rankings.Data_Release_Year,
-               county_health_rankings.fipscode
-        FROM zip_county 
-        JOIN county_health_rankings 
-          ON zip_county.county_code = county_health_rankings.County_code
-        WHERE zip_county.zip = ?
-          AND county_health_rankings.Measure_name = ?
-        '''
+        # First get the county information for the ZIP code
+        cur.execute('''
+            SELECT county, county_code, state
+            FROM zip_county
+            WHERE zip = ?
+        ''', (zip_code,))
+        
+        county_info = cur.fetchone()
+        if not county_info:
+            conn.close()
+            return jsonify({'error': f'No county found for ZIP code {zip_code}'}), 404
 
-        cur.execute(query, (zip_code, measure_name))
+        county, county_code, state = county_info
+
+        # Then get the health rankings data for that county
+        cur.execute('''
+            SELECT State,
+                   County,
+                   State_code,
+                   County_code,
+                   Year_span,
+                   Measure_name,
+                   Measure_id,
+                   Numerator,
+                   Denominator,
+                   Raw_value,
+                   Confidence_Interval_Lower_Bound,
+                   Confidence_Interval_Upper_Bound,
+                   Data_Release_Year,
+                   fipscode
+            FROM county_health_rankings
+            WHERE County = ?
+              AND State = ?
+              AND Measure_name = ?
+            ORDER BY Year_span DESC
+        ''', (county, state, measure_name))
+
         rows = cur.fetchall()
         conn.close()
 
         if not rows:
-            return jsonify({'error': 'No data found'}), 404
+            return jsonify({'error': f'No data found for {measure_name} in {county}, {state}'}), 404
 
         # Define column names
         columns = [
@@ -104,4 +122,4 @@ def county_data():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

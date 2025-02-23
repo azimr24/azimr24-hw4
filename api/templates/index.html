@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>County Health Rankings API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .response {
+            margin-top: 20px;
+            display: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        select, input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>County Health Rankings API</h1>
+    
+    <div class="container">
+        <h2>Make a Request</h2>
+        <form id="apiForm">
+            <div>
+                <label for="zip">ZIP Code:</label><br>
+                <input type="text" id="zip" name="zip" pattern="[0-9]{5}" required>
+            </div>
+            <div>
+                <label for="measure">Measure Name:</label><br>
+                <select id="measure" name="measure_name" required>
+                    <option value="Violent crime rate">Violent crime rate</option>
+                    <option value="Unemployment">Unemployment</option>
+                    <option value="Children in poverty">Children in poverty</option>
+                    <option value="Diabetic screening">Diabetic screening</option>
+                    <option value="Mammography screening">Mammography screening</option>
+                    <option value="Preventable hospital stays">Preventable hospital stays</option>
+                    <option value="Uninsured">Uninsured</option>
+                    <option value="Sexually transmitted infections">Sexually transmitted infections</option>
+                    <option value="Physical inactivity">Physical inactivity</option>
+                    <option value="Adult obesity">Adult obesity</option>
+                    <option value="Premature Death">Premature Death</option>
+                    <option value="Daily fine particulate matter">Daily fine particulate matter</option>
+                </select>
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="teapot" name="teapot"> I'm a teapot
+                </label>
+            </div>
+            <button type="submit">Submit Request</button>
+        </form>
+    </div>
+
+    <div id="response" class="container response">
+        <h2>Response</h2>
+        <pre id="responseData"></pre>
+    </div>
+
+    <script>
+        document.getElementById('apiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                zip: document.getElementById('zip').value,
+                measure_name: document.getElementById('measure').value
+            };
+
+            if (document.getElementById('teapot').checked) {
+                formData.coffee = 'teapot';
+            }
+
+            try {
+                const response = await fetch('/county_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.text();
+                document.getElementById('response').style.display = 'block';
+                document.getElementById('responseData').textContent = 
+                    `Status: ${response.status}\n\n${data}`;
+            } catch (error) {
+                document.getElementById('response').style.display = 'block';
+                document.getElementById('responseData').textContent = 
+                    `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
