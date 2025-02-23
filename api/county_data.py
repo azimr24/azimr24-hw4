@@ -53,37 +53,33 @@ def county_data():
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
-        # Query using JOIN between zip_county and county_health_rankings
+        # Query the county_health_rankings table
         query = '''
-        SELECT chr.State,
-               chr.County,
-               chr.State_code,
-               chr.County_code,
-               chr.Year_span,
-               chr.Measure_name,
-               chr.Measure_id,
-               chr.Numerator,
-               chr.Denominator,
-               chr.Raw_value,
-               chr.Confidence_Interval_Lower_Bound,
-               chr.Confidence_Interval_Upper_Bound,
-               chr.Data_Release_Year,
-               chr.fipscode
-        FROM zip_county zc
-        JOIN county_health_rankings chr
-          ON zc.county = chr.County 
-         AND zc.state = chr.State
-        WHERE zc.zip = ?
-          AND chr.Measure_name = ?
-        ORDER BY chr.Year_span DESC
+        SELECT State,
+               County,
+               State_code,
+               County_code,
+               Year_span,
+               Measure_name,
+               Measure_id,
+               Numerator,
+               Denominator,
+               Raw_value,
+               Confidence_Interval_Lower_Bound,
+               Confidence_Interval_Upper_Bound,
+               Data_Release_Year,
+               fipscode
+        FROM county_health_rankings
+        WHERE Measure_name = ?
+        ORDER BY Year_span DESC
         '''
 
-        cur.execute(query, (zip_code, measure_name))
+        cur.execute(query, (measure_name,))
         rows = cur.fetchall()
         conn.close()
 
         if not rows:
-            return jsonify({'error': f'No data found for ZIP {zip_code} and measure {measure_name}'}), 404
+            return jsonify({'error': f'No data found for measure {measure_name}'}), 404
 
         # Define column names to match the required schema
         columns = [
