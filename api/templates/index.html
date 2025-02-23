@@ -11,41 +11,90 @@
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
+            background-color: #f8f9fa;
         }
         .container {
-            background-color: #f5f5f5;
-            border-radius: 5px;
-            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
             margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         pre {
-            background-color: #f0f0f0;
+            background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             overflow-x: auto;
+            border: 1px solid #e9ecef;
         }
         .response {
             margin-top: 20px;
             display: none;
         }
         button {
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
-        select, input {
-            padding: 8px;
+        select {
+            padding: 10px;
             margin: 5px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
-            width: 200px;
+            width: 100%;
+            max-width: 400px;
+            font-size: 16px;
         }
+        .teapot-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px dashed #ffc107;
+            border-radius: 8px;
+            background-color: #fff3cd;
+        }
+        .teapot-section h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .teapot-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .teapot-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .status-200 { background-color: #d4edda; color: #155724; }
+        .status-404 { background-color: #f8d7da; color: #721c24; }
+        .status-418 { background-color: #fff3cd; color: #856404; }
+        .status-500 { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
@@ -54,13 +103,22 @@
     <div class="container">
         <h2>Make a Request</h2>
         <form id="apiForm">
-            <div>
-                <label for="zip">ZIP Code:</label><br>
-                <input type="text" id="zip" name="zip" pattern="[0-9]{5}" required>
+            <div class="form-group">
+                <label for="zip">ZIP Code:</label>
+                <input type="text" 
+                       id="zip" 
+                       name="zip" 
+                       pattern="[0-9]{5}" 
+                       required 
+                       placeholder="Enter 5-digit ZIP code"
+                       class="form-control">
+                <small class="form-text text-muted">Must be a valid 5-digit ZIP code</small>
             </div>
-            <div>
-                <label for="measure">Measure Name:</label><br>
+
+            <div class="form-group">
+                <label for="measure">Select Health Measure:</label>
                 <select id="measure" name="measure_name" required>
+                    <option value="">-- Select a measure --</option>
                     <option value="Violent crime rate">Violent crime rate</option>
                     <option value="Unemployment">Unemployment</option>
                     <option value="Children in poverty">Children in poverty</option>
@@ -75,17 +133,23 @@
                     <option value="Daily fine particulate matter">Daily fine particulate matter</option>
                 </select>
             </div>
-            <div>
-                <label>
-                    <input type="checkbox" id="teapot" name="teapot"> I'm a teapot
-                </label>
+
+            <div class="teapot-section">
+                <h3> HTTP 418 - I'm a teapot</h3>
+                <p>Enable this option to test the famous HTTP 418 "I'm a teapot" response code, an April Fools' joke from 1998!</p>
+                <div class="teapot-toggle">
+                    <input type="checkbox" id="teapot" name="teapot">
+                    <label for="teapot">Yes, I'm a teapot!</label>
+                </div>
             </div>
-            <button type="submit">Submit Request</button>
+
+            <button type="submit">Send Request</button>
         </form>
     </div>
 
     <div id="response" class="container response">
         <h2>Response</h2>
+        <div id="statusBadge" class="status-badge"></div>
         <pre id="responseData"></pre>
     </div>
 
@@ -112,11 +176,21 @@
                 });
 
                 const data = await response.text();
+                const statusBadge = document.getElementById('statusBadge');
+                
+                // Set status badge
+                statusBadge.textContent = `Status: ${response.status}`;
+                statusBadge.className = `status-badge status-${response.status}`;
+
+                // Show response
                 document.getElementById('response').style.display = 'block';
                 document.getElementById('responseData').textContent = 
-                    `Status: ${response.status}\n\n${data}`;
+                    response.status === 418 ? " I'm a teapot!" : data;
+
             } catch (error) {
                 document.getElementById('response').style.display = 'block';
+                document.getElementById('statusBadge').textContent = 'Error';
+                document.getElementById('statusBadge').className = 'status-badge status-500';
                 document.getElementById('responseData').textContent = 
                     `Error: ${error.message}`;
             }
