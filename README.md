@@ -8,6 +8,8 @@ This project provides an API to access county health rankings data. The API is d
 - `csv_to_sqlite.py`: Utility script to convert CSV data into SQLite database
 - `data.db`: SQLite database containing the county health rankings data
 - `vercel.json`: Vercel deployment configuration
+- `csv_data/`: Directory containing the default CSV data files
+- `.gitignore`: Specifies which files Git should ignore
 
 ## Setup and Installation
 
@@ -17,9 +19,9 @@ This project provides an API to access county health rankings data. The API is d
 pip install -r requirements.txt
 ```
 
-3. Create the SQLite database:
+3. Create the SQLite database using the provided CSV data:
 ```bash
-python csv_to_sqlite.py data.db county_health_rankings.csv
+python csv_to_sqlite.py data.db csv_data/county_health_rankings.csv
 ```
 
 ## Database Setup (`csv_to_sqlite.py`)
@@ -31,10 +33,12 @@ Usage:
 python csv_to_sqlite.py <database_file> <csv_file>
 ```
 
-Example:
+Example using the default data in the csv_data directory:
 ```bash
-python csv_to_sqlite.py data.db county_health_rankings.csv
+python csv_to_sqlite.py data.db csv_data/county_health_rankings.csv
 ```
+
+You can also use your own CSV files as long as they follow the same structure as the provided data.
 
 ## API Usage (`county_data.py`)
 

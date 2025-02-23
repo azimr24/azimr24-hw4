@@ -116,6 +116,25 @@
             border-radius: 4px;
             margin-top: 20px;
         }
+        .status-code {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .status-200 {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-400, .status-404, .status-500 {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-418 {
+            background-color: #fff3cd;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -175,8 +194,8 @@
 
     <div id="response" class="container response">
         <h2>Response</h2>
-        <div id="statusBadge" class="status-badge"></div>
-        <pre id="responseData"></pre>
+        <div id="status-code" class="status-code"></div>
+        <div id="responseData"></div>
     </div>
 
     <script>
@@ -213,6 +232,10 @@
                     return;
                 }
                 
+                // Show status code
+                const statusElement = document.getElementById('status-code');
+                statusElement.innerHTML = `<div class="status-code status-${response.status}">Status Code: ${response.status} ${response.statusText}</div>`;
+                
                 // Try to parse as JSON first
                 try {
                     const jsonData = await response.json();
@@ -227,19 +250,12 @@
                     responseElement.classList.add('error');
                 }
                 
-                const statusBadge = document.getElementById('statusBadge');
-                
-                // Set status badge
-                statusBadge.textContent = `Status: ${response.status}`;
-                statusBadge.className = `status-badge status-${response.status}`;
-
                 // Show response
                 document.getElementById('response').style.display = 'block';
 
             } catch (error) {
                 document.getElementById('response').style.display = 'block';
-                document.getElementById('statusBadge').textContent = 'Error';
-                document.getElementById('statusBadge').className = 'status-badge status-500';
+                document.getElementById('status-code').innerHTML = '<div class="status-code status-500">Status Code: 500 Internal Server Error</div>';
                 document.getElementById('responseData').textContent = 
                     `Error: ${error.message}`;
             }

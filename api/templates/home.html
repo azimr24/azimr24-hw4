@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>County Health Rankings API - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .description {
+            color: #34495e;
+            margin-bottom: 40px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .features {
+            text-align: left;
+            margin: 40px auto;
+            max-width: 600px;
+        }
+        .features h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .features ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .features li {
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+        }
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to County Health Rankings API</h1>
+    
+    <div class="description">
+        <p>Access comprehensive health rankings data for counties across the United States.</p>
+    </div>
+
+    <a href="/county_data" class="button">Go to API Interface</a>
+
+    <div class="features">
+        <h2>Features:</h2>
+        <ul>
+            <li>Query health rankings by ZIP code</li>
+            <li>Filter by various health measures</li>
+            <li>Limit result set size</li>
+            <li>Interactive API testing interface</li>
+            <li>Support for HTTP 418 Teapot response</li>
+        </ul>
+    </div>
+</body>
+</html>

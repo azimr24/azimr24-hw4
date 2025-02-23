@@ -19,6 +19,10 @@ allowed_measures = [
     "Daily fine particulate matter"
 ]
 
+@app.route('/')
+def home():
+    return render_template('home.html')
+
 @app.route('/county_data', methods=['GET'])
 def index():
     return render_template('index.html')
