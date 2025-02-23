@@ -16,6 +16,7 @@ The allowed measure_name values are specified in allowed_measures.
 
 import json
 import sqlite3
+import os
 
 allowed_measures = [
     "Violent crime rate",
@@ -69,7 +70,8 @@ def handler(request, response):
             return response.send('Invalid measure_name')
 
         # Connect to the SQLite database
-        conn = sqlite3.connect('data.db')
+        db_path = os.path.join(os.path.dirname(__file__), '..', 'data.db')
+        conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
         query = '''
